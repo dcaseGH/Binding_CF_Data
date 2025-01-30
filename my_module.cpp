@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <iostream>
 
 namespace py = pybind11;
 
@@ -18,22 +19,22 @@ py::array_t<double> read_numpy_array(const py::array_t<double> &input_array) {
 
   if (info.ndim == 1)
   {
+
     size_t num_elements = info.shape[0]; 
-  
+
     // Create a new output array with the same dimensions
     py::array_t<double> output_array(num_elements);
-
+    py::buffer_info buf_result = output_array.request();
+    
     // Get pointers to the data of the input and output arrays
     double *input_data  = static_cast<double *>(info.ptr);
     double *output_data = output_array.mutable_data();
 
     // Perform some operations on the data (example: copy the input array)
+    //caveat may not be c continuous data if grabbed a slice
     for (size_t i = 0; i < num_elements; ++i) {
-            output_data[i] = 2.0 * input_data[i]; 
-	    //		*(double*)(buf_result.ptr + i * buf_result.strides[0] + 
-            //     j * buf_result.strides[1]) = *(double*)(info.ptr + i * info.strides[0] + 
-							 j * info.strides[1]) * 2.;
-
+      *(double*)(buf_result.ptr + i * buf_result.strides[0]) = *(double*)(info.ptr + i * info.strides[0]) * 2.;
+      //       output_data[i] = 2.0 * input_data[i]; 
     }
     return output_array;
   }
